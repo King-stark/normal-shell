@@ -66,7 +66,7 @@ install_derper(){
     echo -e "${red}检测发现系统未部署Go环境，开始部署Go环境${end}"
     install_go
   else
-    ƒgo install tailscale.com/cmd/derper@main
+    go install tailscale.com/cmd/derper@main
     if [[ $(which derper) == "" ]]; then
       echo -e "${red}derper安装失败，程序退出${end}"
       exit 0
@@ -126,7 +126,7 @@ sign_domain_str=${sign_domain_str:0:${#sign_domain_str}-1}
 echo "$sign_domain_str"
  
 echo "2、站点绝对路径配置，如果未输入或者输入非绝对路径，就默认使用域名为目录配置到/tmp目录下"
-mkdir /certs
+mkdir -p /certs
 read -p "> " web_dir
 if [[ -z "$web_dir" || ! "$web_dir" == /* ]]; then
   web_dir="/certs/"$web_first_domain
@@ -286,7 +286,7 @@ After=network.target
  
 [Service]
 Type=simple
-ExecStart=/root/goProject/bin/derper -hostname $web_domains -c=derper.conf -a :$port -http-port -1 -certdir /certs/${web_domains}/certificate -certmode manual -stun
+ExecStart=/root/goProject/bin/derper -hostname $web_domains -c=derper.conf -a :$port -http-port -1 -certdir $web_dir/certificate -certmode manual -stun
 ExecStop=/usr/bin/kill -9 \$(ps aux |grep derper|awk '{print $2}'|head -1)
 Restart=on-abort
 User=root
@@ -340,7 +340,7 @@ After=network.target
  
 [Service]
 Type=simple
-ExecStart=/root/goProject/bin/derper -hostname $web_domains -c=derper.conf -a :443 -http-port -1 -certdir /certs/${web_domains}/certificate -certmode manual -stun
+ExecStart=/root/goProject/bin/derper -hostname $web_domains -c=derper.conf -a :443 -http-port -1 -certdir $web_dir/certificate -certmode manual -stun
 ExecStop=/usr/bin/kill -9 \$(ps aux |grep derper|awk '{print $2}'|head -1)
 Restart=on-abort
 User=root
