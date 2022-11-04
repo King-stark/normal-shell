@@ -1,8 +1,8 @@
 #!/bin/bash
 xuegua_dir="" # 削刮库目录,如未自定义，留空即可
-embylib_dir="/var/lib/emby" # Emby默认Libray数据库和削刮包缓存目录,不要修改
+embylib_dir="/var/lib/" # Emby默认Libray数据库和削刮包缓存目录,不要修改
 embyserver_dir="/opt/emby-server/" # Emby主程序相关目录，如果不需要备份主程序，删除内容留空即可
-bak_dir="" # 备份文件存放目录，需要自行填写
+bak_dir="" # 备份文件存放目录，需要自行填写，最末尾不要/
 DATE=`date +%Y%m%d` # 时间格式化，勿动
 
 DEL_DAY=7 # 备份脚本保存的天数，默认7天，支持自定义修改
@@ -22,12 +22,12 @@ targz(){
     tar -cf - $3 $2  | pv -s $(du -sk $2 | awk '{print $1}') | gzip > $1
 }
 # 创建日期目录
-mkdir -p $bak_dir/`date '+%Y-%m-%d %H:%M:%S'`
+mkdir -p $bak_dir/${DATE}
 # 停止Emby Server服务
 systemctl stop emby-server
 if [[ $xuegua_dir != "" ]]; then
     cd $xuegua_dir
-    targz $bak_dir/`date '+%Y-%m-%d %H:%M:%S'`/Emby削刮包.tar.gz ./
+    targz $bak_dir/${DATE}/Emby削刮包.tar.gz ./
     if [[ $? -eq 0 ]]; then
         echo "Emby削刮包备份完成······"
     else
@@ -47,7 +47,7 @@ if [[ $xuegua_dir != "" ]]; then
     fi
 else
     cd $xuegua_dir
-    targz $bak_dir/`date '+%Y-%m-%d %H:%M:%S'`/Emby削刮包和LibEmby数据库.tar.gz ./
+    targz $bak_dir/${DATE}/Emby削刮包和LibEmby数据库.tar.gz ./
     if [[ $? -eq 0 ]]; then
         echo "Emby削刮包和LibEmby数据库备份完成······"
     else
