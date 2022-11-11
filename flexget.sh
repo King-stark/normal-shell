@@ -121,6 +121,7 @@ EOF
   fi
   mkdir -p /home/flexget/config && cd /home/flexget/config && wget https://github.com/IvonWei/flexget_qbittorrent_mod/archive/refs/heads/master.zip && unzip master.zip >/dev/null && mv flexget_qbittorrent_mod-master plugins && rm master.zip
   wget -O plugins/nexusphp.py https://raw.githubusercontent.com/Juszoe/flexget-nexusphp/master/nexusphp.py
+  read -p "请设置磁盘低于多少G不再添加种子并触发删种操作：" keep_disk_space
   cat >/home/flexget/config/config.yml<<EOF
 web_server:
   bind: '0.0.0.0'
@@ -173,7 +174,7 @@ templates:
         remove:
           keeper:
             delete_files: yes
-            keep_disk_space: 36
+            keep_disk_space: ${keep_disk_space}
             dl_limit_interval: 900
 
 
@@ -214,24 +215,33 @@ EOF
   while [ $i -lt $times ]
   do
   let i++
-  text1=`sed -n '6p' /home/flexget/config/config.yml|sed 's/]//g'`
+  text1=`sed -n '6p' /home/flexget/config/config.yml|sed 's/]//g'|sed 's/^[ ]*//g'`
   read -p "请添加第${i}个站点的名称：" web
   read -p "请输入${web}的Cookie：" Cookie
   read -p "请输入${web}的Rss订阅链接：" rss
-  if [[ ${i} == 1 ]]; then
-    text2="${text1}${web},]"
-  elif [[ ${i} -eq ${times} ]]; then
-    text2="\  ${text1} ${web}]"
+  read -p "请输入${web}的上行限制(单位Kb/s,如45000则为限速45Mb/s)：" maxupspeed
+  if [[ ${times} -eq 1 ]]; then
+    text2="\  ${text1}${web}]"
   else
-    text2="${text1} ${web},]"
+    if [[ ${i} == 1 ]]; then
+      text2="${text1}${web},]"
+    elif [[ ${i} -eq ${times} ]]; then
+      text2="\  ${text1} ${web}]"
+    else
+      text2="${text1} ${web},]"
+    fi
   fi
-sed -i "6c ${text2}" /home/flexget/config/config.yml
+  sed -i "6c ${text2}" /home/flexget/config/config.yml
 cat >> /home/flexget/config/config.yml <<EOF
   ${web}:
     rss: 
       url: ${rss}
       other_fields:
         - link
+    qbittorrent:
+      maxupspeed: ${maxupspeed}
+      maxdownspeed: 100000
+      label: ${web}
     nexusphp:
       cookie: '${Cookie}'
       user-agent: '{? headers.user_agent ?}'
